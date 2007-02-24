@@ -1,0 +1,21 @@
+
+require 'test/unit'
+
+$LOAD_PATH << ".."; require 'r4tw'
+
+class TiddlerFromUrl < Test::Unit::TestCase
+
+  def setup
+    @tw = make_tw { source_file }
+  end
+
+  def test_it
+    @tw.add_tiddler_from_url(
+        "http://mptw.googlecode.com/svn/trunk/noupgrade/MonkeyPirateTiddlyWiki.tiddler",
+        {'tiddler'=>'MPTW'}
+      )
+    @tw.to_file "zz"
+    assert_equal( @tw.get_tiddler("MPTW").name, "MPTW" )
+  end
+
+end
