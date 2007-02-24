@@ -400,7 +400,11 @@ class TiddlyWiki
   end
 
   def package_as_from_dir(file_name,dir_name)
-    package_as(file_name,Dir.glob("#{$dir}/#{dir_name}/*"))
+    if (dir_name !~ /^\//) # FIXME this is not right on windows
+      package_as(file_name,Dir.glob("#{$dir}/#{dir_name}/*"))
+    else
+      package_as(file_name,Dir.glob("#{dir_name}/*"))
+    end
   end
 
   def add_tiddlers_from_file(file_name)
@@ -450,12 +454,13 @@ class TiddlyWiki
   end
   
   def package(file_names)
+    # fixme this is too hard to read and probably a bad idea to use dump
     "//{{{\nmerge(config.shadowTiddlers,{\n\n"+
     ((file_names.map do |f|
       Tiddler.new.from_file(f)
     end).map do |t|
       "'" + t.name + "':[\n " + 
-          t.text.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"") + "\n].join(\"\\n\")"
+          t.text.chomp.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"").gsub(/\\#/,"#") + "\n].join(\"\\n\")"
     end).join(",\n\n")+
     "\n\n});\n//}}}\n"
   end
