@@ -1,15 +1,47 @@
-
+#
 # r4tw
-# Ruby for TiddlyWiki
 # By Simon Baird
-# See http://code.google.com/p/r4tw/
+# Revision $Rev$
+# Ruby classes for manipuating TiddlyWikis and tiddlers 
+# similar to cook and ginsu but cooler
+#
 
 require 'pathname'
 require 'open-uri'
 
-#========================================================================
-# Utility methods
-# 
+#
+# Some handy bits and pieces
+#
+
+def read_file(file_name)
+  File.read(file_name)
+end
+
+class String
+  def to_file(file_name)
+    File.open(file_name,"w") { |f| f << to_s }
+  end
+end
+
+def fetch_url(url)
+  open(url).read.to_s
+end
+
+def read_from(where)
+  if where =~ /^(ftp|http|https):\/\//
+    fetch_url(where)
+  else
+    read_file(where)
+  end
+end
+
+def this_dir
+  Pathname.new($0).expand_path.dirname
+end
+
+#
+# TiddlyWiki related utils
+#
 
 class String 
  
@@ -34,28 +66,15 @@ class String
     scan(/\[\[([^\]]+)\]\]|(\S+)/).map {|m| m[0]||m[1]}
   end  
 
-  def to_file(file_name)
-    File.open(file_name,"w") { |f| f << to_s }
-  end
-
   def eat_ctrl_m!
-    self.gsub!("\x0d",'')
+    gsub!("\x0d",'')
   end
 
-end
-
-
-def read_file(file_name)
-  File.read(file_name)
-end
-
-def fetch_url(url)
-  open(url).read.to_s
 end
 
 class Array
   def toBracketedList
-    self.map{ |i| (i =~ /\s/) ? ("[["+i+"]]") : i }.join(" ")
+    map{ |i| (i =~ /\s/) ? ("[["+i+"]]") : i }.join(" ")
   end    
 end
 
@@ -76,8 +95,8 @@ class Time
 end
 
 
-#========================================================================
-# Tiddler class
+#
+# Tiddler
 # 
 
 class Tiddler
@@ -94,6 +113,13 @@ class Tiddler
   
   attr_accessor :fields, :text
 
+  def self.method_missing(method_name,*args);
+    case method_name.to_s
+    when /^new_(.*)$/
+      self.new.send($1,*args);
+    end
+  end
+
   def initialize
         @fields = @@defaults
         @text = ""
@@ -106,6 +132,7 @@ class Tiddler
     self
   end
 
+	# Create a tiddler from a string containing a tiddler div
   def from_div(div)
     @raw = div
     @fields = {}
@@ -269,14 +296,9 @@ class Tiddler
 end
 
 
-
-
-#========================================================================
-# Tiddlywiki class
+#
+# Tiddlywiki
 # 
-
-# is this cool or not?
-$dir = Pathname.new($0).expand_path.dirname
 
 class TiddlyWiki
 
@@ -287,6 +309,14 @@ class TiddlyWiki
     @tiddlers = []
     if block
       instance_eval(&block)
+    end
+  end
+
+  # this should replace all the add_tiddler_from_blah methods
+  def method_missing(method_name,*args);
+    case method_name.to_s
+    when /^add_tiddler_(.*)$/
+      add_tiddler(Tiddler.send("new_#{$1}",*args))
     end
   end
 
@@ -390,21 +420,17 @@ class TiddlyWiki
   end
 
   def add_tiddlers_from_dir(dir_name)
-    add_tiddlers(Dir.glob("#{$dir}/#{dir_name}/*"))
+    add_tiddlers(Dir.glob("#{dir_name}/*"))
   end
 
   def add_shadow_tiddlers_from_dir(dir_name)
-    Dir.glob("#{$dir}/#{dir_name}/*").each do |f|
+    Dir.glob("#{dir_name}/*").each do |f|
       add_shadow_tiddler_from_file(f)
     end
   end
 
   def package_as_from_dir(file_name,dir_name)
-    if (dir_name !~ /^\//) # FIXME this is not right on windows
-      package_as(file_name,Dir.glob("#{$dir}/#{dir_name}/*"))
-    else
-      package_as(file_name,Dir.glob("#{dir_name}/*"))
-    end
+    package_as(file_name,Dir.glob("#{dir_name}/*"))
   end
 
   def add_tiddlers_from_file(file_name)
@@ -454,13 +480,12 @@ class TiddlyWiki
   end
   
   def package(file_names)
-    # fixme this is too hard to read and probably a bad idea to use dump
     "//{{{\nmerge(config.shadowTiddlers,{\n\n"+
     ((file_names.map do |f|
       Tiddler.new.from_file(f)
     end).map do |t|
       "'" + t.name + "':[\n " + 
-          t.text.chomp.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"").gsub(/\\#/,"#") + "\n].join(\"\\n\")"
+          t.text.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"") + "\n].join(\"\\n\")"
     end).join(",\n\n")+
     "\n\n});\n//}}}\n"
   end
