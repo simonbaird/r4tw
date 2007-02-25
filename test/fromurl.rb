@@ -5,6 +5,8 @@ $LOAD_PATH << ".."; require 'r4tw'
 
 class FromUrl < Test::Unit::TestCase
 
+  include Utils
+
   def setup
     @tw = make_tw {
       source_url

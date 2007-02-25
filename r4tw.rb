@@ -1,42 +1,42 @@
 #
-# r4tw
-# $Rev$
-# By Simon Baird
-# Ruby classes for manipuating TiddlyWikis and tiddlers 
-# similar to cook and ginsu but cooler
+# =r4tw
+# Author:: Simon Baird
+# r4tw is some ruby classes for manipuating TiddlyWikis and tiddlers.
+# It is similar to cook and ginsu but much cooler.
 #
+# <i>$rev: 1684 $</i>
 
 require 'pathname'
 require 'open-uri'
 
-#
-# Some handy bits and pieces
-#
+module Utils
 
-def read_file(file_name)
-  File.read(file_name)
+	def read_file(file_name)
+		File.read(file_name)
+	end
+
+	def fetch_url(url)
+		open(url).read.to_s
+	end
+
+	def read_from(where)
+		if where =~ /^(ftp|http|https):\/\//
+			fetch_url(where)
+		else
+			read_file(where)
+		end
+	end
+
+	def this_dir
+		Pathname.new($0).expand_path.dirname
+	end
+
 end
 
 class String
   def to_file(file_name)
     File.open(file_name,"w") { |f| f << to_s }
   end
-end
-
-def fetch_url(url)
-  open(url).read.to_s
-end
-
-def read_from(where)
-  if where =~ /^(ftp|http|https):\/\//
-    fetch_url(where)
-  else
-    read_file(where)
-  end
-end
-
-def this_dir
-  Pathname.new($0).expand_path.dirname
 end
 
 #
@@ -100,6 +100,8 @@ end
 # 
 
 class Tiddler
+
+	include Utils 
 
   @@main_fields = %w[tiddler modifier modified created tags]
 
@@ -301,6 +303,8 @@ end
 # 
 
 class TiddlyWiki
+
+	include Utils 
 
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
