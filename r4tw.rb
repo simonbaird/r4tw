@@ -1,7 +1,7 @@
 #
 # r4tw
+# $Rev$
 # By Simon Baird
-# Revision $Rev$
 # Ruby classes for manipuating TiddlyWikis and tiddlers 
 # similar to cook and ginsu but cooler
 #
