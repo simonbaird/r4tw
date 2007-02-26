@@ -8,6 +8,7 @@ class FromUrl < Test::Unit::TestCase
   include Utils
 
   def setup
+  ### fetch_url("http://www.tiddlywiki.com/empty.html").eat_ctrl_m!.to_file("empty.html")
     @tw = make_tw {
       source_url
     }

@@ -31,12 +31,16 @@ class TiddlerTest < Test::Unit::TestCase
   def test_orig_tiddler
                  
     assert_equal(
-      @tw.get_tiddler("LegacyStrikeThroughPlugin").name,
-      "LegacyStrikeThroughPlugin"
+      @tw2.get_tiddler("translations").name,
+      "translations"
       )
             
     assert_equal(
       @tw.tiddlers.length,
+      0)            
+
+    assert_equal(
+      @tw2.tiddlers.length,
       1)            
        
   end   

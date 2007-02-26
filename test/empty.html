@@ -38,7 +38,9 @@ DAMAGE.
 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <!--PRE-HEAD-START-->
+<!--{{{-->
 <link rel='alternate' type='application/rss+xml' title='RSS' href='index.xml'/>
+<!--}}}-->
 <!--PRE-HEAD-END-->
 <title> TiddlyWiki - a reusable non-linear personal web notebook </title>
 <script type="text/javascript">
@@ -7055,10 +7057,12 @@ var regexpCarriageReturn = new RegExp("\r","mg");
 
 </style>
 <!--POST-HEAD-START-->
+
 <!--POST-HEAD-END-->
 </head>
 <body onload="main();" onunload="if(window.checkUnsavedChanges) checkUnsavedChanges();">
 <!--PRE-BODY-START-->
+
 <!--PRE-BODY-END-->
 	<script type="text/javascript">
 //<![CDATA[
@@ -7075,10 +7079,9 @@ if (useJavaSaver)
 	<div id="saveTest"></div>
 	<div id="contentWrapper"></div>
 	<div id="contentStash"></div>
-	<div id="storeArea">
-<div tiddler="LegacyStrikeThroughPlugin" modifier="MartinBudden" modified="200607210000" created="200609152742" tags="systemConfig">/***\n|''Name:''|LegacyStrikeThroughPlugin|\n|''Description:''|Support for  legacy (pre 2.1) strike through formatting|\n|''Version:''|1.0.1|\n|''Date:''|Jul 21, 2006|\n|''Source:''|http://www.tiddlywiki.com/#LegacyStrikeThroughPlugin|\n|''Author:''|MartinBudden (mjbudden (at) gmail (dot) com)|\n|''License:''|[[BSD open source license]]|\n|''CoreVersion:''|2.1.0|\n|''Browser:''|Firefox 1.0.4+; Firefox 1.5; InternetExplorer 6.0|\n\n***/\n\n//{{{\n\n// Ensure that the LegacyStrikeThrough Plugin is only installed once.\nif(!version.extensions.LegacyStrikeThroughPlugin)\n	{\n	version.extensions.LegacyStrikeThroughPlugin = true;\n\nconfig.formatters.push(\n{\n	name: &quot;legacyStrikeByChar&quot;,\n	match: &quot;==&quot;,\n	termRegExp: /(==)/mg,\n	element: &quot;strike&quot;,\n	handler: config.formatterHelpers.createElementAndWikify\n});\n\n} // end of &quot;install only once&quot;\n//}}}\n</div>
-</div>
+	<div id="storeArea"></div>
 <!--POST-BODY-START-->
+
 <!--POST-BODY-END-->
 	</body>
 </html>

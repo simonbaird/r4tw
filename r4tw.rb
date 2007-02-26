@@ -132,6 +132,8 @@ class Tiddler
       'text'    => '', 
   }
   
+	attr_accessor :fields
+
   # New by itself doesn't do much so instead you usually use one of these:
   # * Tiddler.new.from_scratch
   # * Tiddler.new.from_div
@@ -140,8 +142,7 @@ class Tiddler
   # * Tiddler.new.from_remote_tw
   #
   def initialize
-        @fields = @@defaults
-        @text = ""
+        @fields = {}
   end
 
   # Creates a tiddler from scratch. 
@@ -168,8 +169,8 @@ class Tiddler
     field_string = match_data[1]
     text_string = match_data[2]
 
-    field_string.scan(/ ([\w\.]+)="([^"]+)"/) do |name,value|
-      @fields[name] = value
+    field_string.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
+      @fields[field_name] = field_value
     end
 
     @fields['text'] = text_string.unescapeLineBreaks.decodeHTML
@@ -274,20 +275,20 @@ class Tiddler
   end
   
   def add_tag(new_tag)
-    fields['tags'] = fields['tags'].
+    @fields['tags'] = @fields['tags'].
       readBracketedList.
-        push(new_tag).
-          uniq.
-            toBracketedList
+      push(new_tag).
+      uniq.
+      toBracketedList
 
     self
   end
 
   def remove_tag(old_tag)
-    fields['tags'] = fields['tags'].
+    @fields['tags'] = @fields['tags'].
       readBracketedList.
-        reject { |tag| tag == old_tag }.
-          toBracketedList
+      reject { |tag| tag == old_tag }.
+      toBracketedList
 
     self
   end
