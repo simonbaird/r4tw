@@ -6,46 +6,37 @@
 #
 # <i>$rev: 1684 $</i>
 
+
+#---------------------------------------------------------------------
+#-- General purpose utils
+
 require 'pathname'
 require 'open-uri'
 
-
-module Utils #:nodoc:
-
-  def read_file(file_name)
-    File.read(file_name)
-  end
-
-  def fetch_url(url)
-    open(url).read.to_s
-  end
-
-  def read_from(file_or_url)
-    if file_or_url =~ /^(ftp|http|https):\/\//
-      fetch_url(file_or_url)
-    else
-      read_file(file_or_url)
-    end
-  end
-
-  def this_dir
-    Pathname.new($0).expand_path.dirname
-  end
-
+def read_file(file_name) #:nodoc:
+  File.read(file_name)
 end
 
-class String #:nodoc:
-  def to_file(file_name)
-    File.open(file_name,"w") { |f| f << to_s }
+def fetch_url(url) #:nodoc:
+  open(url).read.to_s
+end
+
+def this_dir #:nodoc:
+  Pathname.new($0).expand_path.dirname
+end
+
+class String
+  def to_file(file_name) #:nodoc:
+    File.open(file_name,"w") { |f| f << self }
   end
 end
 
-#
+
+#---------------------------------------------------------------------
 #-- TiddlyWiki related utils
-#
 
-class String #:nodoc:
- 
+class String
+
   def escapeLineBreaks
     gsub(/\\/m,"\\s").gsub(/\n/m,"\\n").gsub(/\r/m,"")
   end
@@ -63,35 +54,30 @@ class String #:nodoc:
     gsub(/&amp;/m,"&").gsub(/&lt;/m,"<").gsub(/&gt;/m,">").gsub(/&quot;/m,"\"")
   end
 
-  def readBracketedList
+  def readBrackettedList
     scan(/\[\[([^\]]+)\]\]|(\S+)/).map {|m| m[0]||m[1]}
   end  
 
-  # From some reason the empty.html file at tiddlywiki.com
-  # sometimes gets a few spurious Ctrl-M chars in it
-  # This method can be used to eat them
+  def toBrackettedList
+    self
+  end
+
   def eat_ctrl_m!
     gsub!("\x0d",'')
   end
 
-  def as_tag_field
-    self
-  end
-
 end
 
-class Array #:nodoc:
-  def toBracketedList
+class Array
+
+  def toBrackettedList
     map{ |i| (i =~ /\s/) ? ("[["+i+"]]") : i }.join(" ")
   end    
 
-  def as_tag_field
-    toBracketedList
-  end
-
 end
 
-class Time #:nodoc:
+class Time
+
   def convertToLocalYYYYMMDDHHMM()
     self.localtime.strftime("%Y%m%d%H%M")    
   end
@@ -100,23 +86,27 @@ class Time #:nodoc:
     self.utc.strftime("%Y%m%d%H%M")    
   end
     
-  def Time.convertFromYYYYMMDDHHMM(d)
-    m = d.match(/(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/)
+  def Time.convertFromYYYYMMDDHHMM(date_string)
+    m = date_string.match(/(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/)
     Time.utc(m[1],m[2],m[3],m[4],m[5])        
   end
     
 end
 
 
+#---------------------------------------------------------------------
+# Tiddler
 #
+
 # =Tiddler
 # For creating and manipulating tiddlers
+# ===Example
+#  puts Tiddler.new.from_scratch('tiddler'=>'Hello','text'=>'Hi there').to_s
 
 class Tiddler
 
-  include Utils 
-
   @@main_fields = %w[tiddler modifier modified created tags]
+  # and soon to be changecount?
 
   # text is not really a field in TiddlyWiki it makes
   # things easier to make it one here.  It could possibly
@@ -129,11 +119,21 @@ class Tiddler
       'created'  => Time.now.convertToYYYYMMDDHHMM,
       'modifier' => 'r4tw',
       'tags'     => '',
-      'text'    => '', 
+      'text'     => '', 
+  }
+
+  # used by from_file
+  @@default_ext_tag_map = {
+      '.js'      => %[systemConfig],
+      '.html'    => %[html],
+      '.css'     => %[css],
+      '.pub'     => %[contentPublisher],
+      '.palette' => %[palette],
   }
   
-	attr_accessor :fields
+  attr_accessor :fields
 
+  #
   # New by itself doesn't do much so instead you usually use one of these:
   # * Tiddler.new.from_scratch
   # * Tiddler.new.from_div
@@ -145,6 +145,7 @@ class Tiddler
         @fields = {}
   end
 
+  #
   # Creates a tiddler from scratch. 
   # Fields containing
   # Example:
@@ -157,68 +158,69 @@ class Tiddler
   #
   def from_scratch(fields={})
     @fields = @@defaults.merge(fields)
-    @fields['tags'] &&= @fields['tags'].as_tag_field # in case it's an array
+    @fields['tags'] &&= @fields['tags'].toBrackettedList # in case it's an array
     self
   end
 
+  #
   # Creates a tiddler from a string containg an html div such as
   # would be found in a TiddlyWiki storeArea
   #
-  def from_div(div)
-    match_data = div.match(/<div([^>]+)>([^<]*)<\/div>/)
-    field_string = match_data[1]
-    text_string = match_data[2]
+  def from_div(div_str)
+    match_data = div_str.match(/<div([^>]+)>([^<]*)<\/div>/)
+    field_str = match_data[1]
+    text_str = match_data[2]
 
-    field_string.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
+    field_str.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
       @fields[field_name] = field_value
     end
 
-    @fields['text'] = text_string.unescapeLineBreaks.decodeHTML
+    @fields['text'] = text_str.unescapeLineBreaks.decodeHTML
 
     self
   end
 
-  def from_remote_tw(url)
-    tiddler_name = url.split("#").last
-    # XXX fix me soon
-    make_tw { source_empty(url) }.get_tiddler(tiddler_name)
+  #
+  # Creates a tiddler from a file.
+  # Does some guessing about tags based on the file's extension
+  # 
+  def from_file(file_name, ext_tag_map=@@default_ext_tag_map)
+    ext = File.extname(file_name)
+    base = File.basename(file_name,extension)
+    @fields = @@defaults.dup
+    @fields['tiddler'] = base
+    @fields['text'] = read_file(file_name)
+    @fields['modified'] = File.mtime(file_name).convertToYYYYMMDDHHMM
+    @fields['created'] = @fields['modified']
+    @fields['tags'] = ext_tag_map[ext].toBrackettedList if ext_tag_map[ext]
+    self
   end
 
+  #
+  # Creates a tiddler from a url. The entire contents of the page are the contents
+  # of the tiddler.
+  # You should set the 'tiddler' field and other fields using the field param
+  # There is no automatic tagging for this one. 
+  # 
   def from_url(url,fields={})
     @text = fetch_url(url)
     @fields = @@defaults.merge(fields)    
     self
   end
 
-  def from_file(file_name,fields={})
-    @text = read_file(file_name)
-    @fields = @@defaults.merge(fields)
-    
-    ext = File.extname(file_name)
-    @fields['tiddler'] = File.basename(file_name,ext)
-    @fields['modified'] = File.mtime(file_name).convertToYYYYMMDDHHMM
-    
-    case ext
-    
-      when ".js"
-        add_tag "systemConfig"
-        
-      # these should be more configurable probably
-      when ".html"
-        add_tag "html"
-      when ".css"
-        add_tag "css"                
-      when ".pub"
-        add_tag "contentPublisher"                
-      when ".palette"
-        add_tag "palette"                
-        
-    end
-    
-    self
+  #
+  # Reads a tiddler from a remote TiddlyWiki file specified by a url
+  # with a #TiddlerName appended, eg
+  #  Tiddler.new.from_remote_tw("http://www.tiddlywiki.com/#HelloThere")
+  #
+  def from_remote_tw(url)
+    tiddler_name = url.split("#").last
+    ## XXX want to make it TiddlyWiki.new.from_url(url)
+    make_tw{ source_empty(url) }.get_tiddler(tiddler_name)
   end
 
-  def to_div
+  # Converts to a div suitable for a TiddlyWiki store area
+  def to_s
     main_fields = @@main_fields
     extended_fields = @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
 
@@ -229,10 +231,16 @@ class Tiddler
     "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
   end
 
-  def to_s
-    to_div
+  # Same as to_s
+  def to_div
+    to_s
   end
 
+  # Lets you access fields like this:
+  #  tiddler.name
+  #  tiddler.created
+  # etc
+  #
   def method_missing(method,*args)
 
     method = method.to_s
@@ -249,54 +257,70 @@ class Tiddler
     if @@main_fields.include? method or @fields[method]
       @fields[method]
     else
-      raise "No such tiddler field or method #{method}"
+      raise "No such field or method #{method}"
     end
 
   end
 
-  #------------------------------------------------------------
-
+  # Add some text to the content of the tiddler
   def append(text)
     @fields['text'] += text
     self
   end
 
+  # Rename a tiddler
   def rename(new_name)
     @fields['tiddler'] = new_name
     self
   end
 
+  # Makes a copy of this tiddler
   def copy
     Tiddler.new.from_div(self.to_div)
   end
 
+  # Makes a copy of this tiddler with a new title
   def copy_to(new_title)
     copy.rename(new_title)
   end
   
+  # Adds a tag
   def add_tag(new_tag)
     @fields['tags'] = @fields['tags'].
-      readBracketedList.
+      readBrackettedList.
       push(new_tag).
       uniq.
-      toBracketedList
+      toBrackettedList
 
     self
   end
 
+  # Adds a list of tags
+  def add_tags(tags)
+    tags.each { |tag| add_tag(tag) }
+  end
+
+  # Removes a single tag
   def remove_tag(old_tag)
     @fields['tags'] = @fields['tags'].
-      readBracketedList.
+      readBrackettedList.
       reject { |tag| tag == old_tag }.
-      toBracketedList
+      toBrackettedList
 
     self
   end
 
-  def has_tag(tag) 
-    fields['tags'] && fields['tags'].readBracketedList.include?(tag)
+  # Removes a list of tags
+  def remove_tags(tags)
+    tags.each { |tag| remove_tags(tag) }
   end
 
+  # Returns true if a tiddler has a particular tag
+  def has_tag(tag) 
+    fields['tags'] && fields['tags'].readBrackettedList.include?(tag)
+  end
+
+  # Returns all tiddler slice
   def get_slices
     if not @slices
       @slices = {}
@@ -308,11 +332,14 @@ class Tiddler
     @slices
   end
 
+  # Returns a tiddler slice
   def get_slice(slice)
     get_slices[slice]
   end
 
-  # Experimental
+  #
+  # Experimental. Provides access to plugin meta slices.
+  # Returns one meta value or a hash of them if no argument is given
   #
   def plugin_meta(slice=nil)
     # see http://www.tiddlywiki.com/#ExamplePlugin
@@ -329,23 +356,21 @@ class Tiddler
 
 end
 
-
+#---------------------------------------------------------------------
+# =Tiddlywiki
+# Create a manipulate TiddlyWiki files 
 #
-# Tiddlywiki
-# 
+
+#####
+##### Done cleaning up Tiddler but haven' started on this yet...
+#####
 
 class TiddlyWiki
 
-  include Utils 
-
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
-  def initialize(&block)
-  
+  def initialize
     @tiddlers = []
-    if block
-      instance_eval(&block)
-    end
   end
 
   # this should replace all the add_tiddler_from_blah methods
@@ -401,8 +426,8 @@ class TiddlyWiki
   end
 
   def get_orig_tiddlers
-    tiddler_divs.inject([]) do |tiddlers,tiddler_div|
-      tiddlers << Tiddler.new.from_div(tiddler_div)
+    tiddler_divs.map do |tiddler_div|
+      Tiddler.new.from_div(tiddler_div)
     end
   end
 
@@ -534,9 +559,15 @@ class TiddlyWiki
 
 end
 
-# for funky DSL use
+#
+# A short hand for DSL style TiddlyWiki creation. Takes a block of TiddlyWiki methods that get instance_eval'ed
+#
 def make_tw(&block)
-  TiddlyWiki.new(&block)
+  tw = TiddlyWiki.new
+  if block
+    tw.instance_eval(&block)
+  end
+  tw
 end
 
 

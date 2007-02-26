@@ -12,7 +12,6 @@ class FromRemote < Test::Unit::TestCase
 
   def test_it
     @tw.add_tiddler_from_remote_tw("http://www.tiddlywiki.com/#HelloThere")
-    #@tw.to_file "zz"
     assert_equal( @tw.get_tiddler("HelloThere").name, "HelloThere" )
     assert_equal( @tw.get_tiddler("HelloThere").modifier, "JeremyRuston" )
   end

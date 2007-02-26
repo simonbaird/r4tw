@@ -10,6 +10,5 @@ this_dir = this_file.dirname
 Dir.chdir this_dir
 
 Dir["*.rb"].reject{|f| f == "all.rb"}.each do |test_unit|
-  puts test_unit
   require test_unit
 end

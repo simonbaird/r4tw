@@ -40,12 +40,12 @@ class TiddlerTest < Test::Unit::TestCase
 
     assert_equal(
       foo,
-      "[[Hello there]] this that [[other]] [[one more]]".readBracketedList
+      "[[Hello there]] this that [[other]] [[one more]]".readBrackettedList
       )
             
     assert_equal(
       foo,
-      foo.toBracketedList.readBracketedList
+      foo.toBrackettedList.readBrackettedList
     )            
         
   end

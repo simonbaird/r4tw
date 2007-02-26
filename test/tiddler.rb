@@ -1,9 +1,9 @@
 
 require 'test/unit'
-
 $LOAD_PATH << ".."; require 'r4tw'
 
-class TiddlerTest1 < Test::Unit::TestCase
+
+class MyTest < Test::Unit::TestCase
 
   def test_tiddler
     
@@ -15,6 +15,7 @@ class TiddlerTest1 < Test::Unit::TestCase
       )
            
     assert_equal("New Tiddler",t.name)
+    
     assert_equal("r4tw",t.modifier)   
         
     assert_equal(
