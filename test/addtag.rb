@@ -8,7 +8,7 @@ class TagTest < Test::Unit::TestCase
   def setup
     @tw = make_tw {
       source_file "empty.html"
-      add_tiddler Tiddler.new.from_scratch({'tiddler'=>'foo'},'bar').add_tag("hey")
+      add_tiddler Tiddler.new.from_scratch({'tiddler'=>'foo', 'text'=>'bar'}).add_tag("hey")
     }
   end
 

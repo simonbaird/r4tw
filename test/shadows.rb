@@ -12,7 +12,7 @@ class ShadowTest < Test::Unit::TestCase
   end
 
   def test_shadow
-      @tw.add_shadow_tiddler Tiddler.new.from_scratch({'tiddler'=>'foo'},'bar')
+      @tw.add_shadow_tiddler Tiddler.new.from_scratch({'tiddler'=>'foo','text'=>'bar'})
       #@tw.to_file "shadowtest.html"
       assert_match(
       	/^config.shadowTiddlers\["foo"\] = "bar";/m,
