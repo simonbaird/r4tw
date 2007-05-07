@@ -6,29 +6,24 @@ $LOAD_PATH << ".."; require 'r4tw'
 class TiddlerTest < Test::Unit::TestCase
 
   def setup
-    @tw = make_tw {
-      source_file "empty.html"
-    }
-    @tw2 = make_tw {
-      source_file "empty2.html"
-    }
+    @tw  = make_tw { source_file "withcontent/empty.html" }
+    @tw2 = make_tw { source_file "withcontent/empty2.html" }
+    @tw3 = make_tw { source_file "empties/2.2.0.beta5.html" }
+    @tw4 = make_tw { source_file "withcontent/2.2.0.beta5.html" }
+
+    #puts @tw4.tiddlers[0].name
   end
 
   def test_load_empty
-                 
-    assert_equal(
-      @tw.to_s,
-      File.read("empty.html")
-      )
-
-    assert_equal(
-      @tw2.to_s,
-      File.read("empty2.html")
-      )
+    
+    assert_equal(@tw.to_s,  File.read("withcontent/empty.html"))
+    assert_equal(@tw2.to_s, File.read("withcontent/empty2.html"))
+    assert_equal(@tw3.to_s, File.read("empties/2.2.0.beta5.html"))
+    assert_equal(@tw4.to_s, File.read("withcontent/2.2.0.beta5.html"))
 
   end
     
-  def test_orig_tiddler
+  def ztest_orig_tiddler
                  
     assert_equal(
       @tw2.get_tiddler("translations").name,

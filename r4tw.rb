@@ -167,9 +167,12 @@ class Tiddler
   # would be found in a TiddlyWiki storeArea
   #
   def from_div(div_str)
-    match_data = div_str.match(/<div([^>]+)>([^<]*)<\/div>/)
+    match_data = div_str.match(/<div([^>]+)>(.*?)<\/div>/m)
     field_str = match_data[1]
     text_str = match_data[2]
+
+		text_str.sub!(/\n<pre>/,'')
+		text_str.sub!(/<\/pre>\n/,'')
 
     field_str.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
       @fields[field_name] = field_value
@@ -220,20 +223,28 @@ class Tiddler
   end
 
   # Converts to a div suitable for a TiddlyWiki store area
-  def to_s
+  def to_s(use_pre=false)
     main_fields = @@main_fields
+		if use_pre
+			main_fields[0] = 'title' # instead of tiddler (this sucks)
+		end
     extended_fields = @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
 
     fields_string =
-      main_fields.map { |f| %{#{f}="#{@fields[f]}"} } +
+      main_fields.reject{|f| f == 'modified' and !@fields[f]}.map { |f| %{#{f}="#{@fields[f]}"} } +
       extended_fields.map{ |f| %{#{f}="#{@fields[f]}"} }    
 
-    "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
+		if use_pre
+		  "<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>"
+		else
+		  "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
+		end
+
   end
 
   # Same as to_s
-  def to_div
-    to_s
+  def to_div(use_pre)
+    to_s(use_pre)
   end
 
   # Lets you access fields like this:
@@ -245,9 +256,15 @@ class Tiddler
 
     method = method.to_s
 
+		if @fields['title']
+			title_field = 'title'
+		else
+			title_field = 'tiddler'
+		end
+
     synonyms = {
-      'name'    => 'tiddler',
-      'title'   => 'tiddler',
+      'name'    => title_field,
+      'title'   => title_field,
       'content' => 'text',
       'body'    => 'text',
     }
@@ -369,7 +386,8 @@ class TiddlyWiki
 
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
-  def initialize
+  def initialize(use_pre=false)
+		@use_pre = use_pre
     @tiddlers = []
   end
 
@@ -389,6 +407,9 @@ class TiddlyWiki
       @raw = read_file(@empty_file)
     end
     @raw.eat_ctrl_m!
+		if @raw =~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
+			@use_pre = true
+		end
     @core_hacks = []
     @orig_tiddlers = get_orig_tiddlers
     @tiddlers = @orig_tiddlers
@@ -402,7 +423,7 @@ class TiddlyWiki
     source_empty(url)
   end
 
-  @@store_regexp = /^(.*<div id="storeArea">\n?)(.*)(\n?<\/div>\n<!--POST-BODY-START-->.*)$/m
+  @@store_regexp = /^(.*<div id="storeArea">\n?)(.*)(\n?<\/div>\n<!--.*)$/m
 
   def pre_store
     @raw.sub(@@store_regexp,'\1')
@@ -417,7 +438,10 @@ class TiddlyWiki
   end
 
   def tiddler_divs
-    store.strip.to_a
+		# the old way, one tiddler per line...
+    # store.strip.to_a
+		# the new way
+		store.scan(/(<div ti[^>]+>.*?<\/div>)/m).map { |m| m[0] }
   end
 
   def add_core_hack(regexp,replace)
@@ -514,7 +538,7 @@ class TiddlyWiki
   end
 
   def store_to_s
-    @tiddlers.sort_by{|t| t.name}.inject(""){ |out,t|out << t.to_div << "\n"}
+    @tiddlers.sort_by{|t| t.name}.inject(""){ |out,t|out << t.to_div(@use_pre) << "\n"}
   end
 
   def store_to_file(file_name)
