@@ -171,8 +171,8 @@ class Tiddler
     field_str = match_data[1]
     text_str = match_data[2]
 
-		text_str.sub!(/\n<pre>/,'')
-		text_str.sub!(/<\/pre>\n/,'')
+    text_str.sub!(/\n<pre>/,'')
+    text_str.sub!(/<\/pre>\n/,'')
 
     field_str.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
       @fields[field_name] = field_value
@@ -197,6 +197,10 @@ class Tiddler
     @fields['created'] = @fields['modified']
     @fields['tags'] = ext_tag_map[ext].toBrackettedList if ext_tag_map[ext]
     self
+  end
+
+  def prepend_content(new_content)
+    @fields['text'] = new_content + @fields['text']
   end
 
   #
@@ -225,20 +229,20 @@ class Tiddler
   # Converts to a div suitable for a TiddlyWiki store area
   def to_s(use_pre=false)
     main_fields = @@main_fields
-		if use_pre
-			main_fields[0] = 'title' # instead of tiddler (this sucks)
-		end
+    if use_pre
+      main_fields[0] = 'title' # instead of tiddler (this sucks)
+    end
     extended_fields = @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
 
     fields_string =
       main_fields.reject{|f| f == 'modified' and !@fields[f]}.map { |f| %{#{f}="#{@fields[f]}"} } +
       extended_fields.map{ |f| %{#{f}="#{@fields[f]}"} }    
 
-		if use_pre
-		  "<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>"
-		else
-		  "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
-		end
+    if use_pre
+      "<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>"
+    else
+      "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
+    end
 
   end
 
@@ -252,19 +256,23 @@ class Tiddler
   #  tiddler.created
   # etc
   #
+
+  def title_field
+    if @fields['title']
+      'title'
+    else
+      'tiddler'
+    end
+  end
+
   def method_missing(method,*args)
 
     method = method.to_s
 
-		if @fields['title']
-			title_field = 'title'
-		else
-			title_field = 'tiddler'
-		end
-
     synonyms = {
       'name'    => title_field,
       'title'   => title_field,
+      'tiddler' => title_field,
       'content' => 'text',
       'body'    => 'text',
     }
@@ -287,7 +295,7 @@ class Tiddler
 
   # Rename a tiddler
   def rename(new_name)
-    @fields['tiddler'] = new_name
+    @fields[title_field] = new_name
     self
   end
 
@@ -387,7 +395,7 @@ class TiddlyWiki
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
   def initialize(use_pre=false)
-		@use_pre = use_pre
+    @use_pre = use_pre
     @tiddlers = []
   end
 
@@ -406,10 +414,13 @@ class TiddlyWiki
     else
       @raw = read_file(@empty_file)
     end
-    @raw.eat_ctrl_m!
-		if @raw =~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
-			@use_pre = true
-		end
+
+    # stupid ctrl (\r) char
+    #@raw.eat_ctrl_m!
+
+    if @raw =~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
+      @use_pre = true
+    end
     @core_hacks = []
     @orig_tiddlers = get_orig_tiddlers
     @tiddlers = @orig_tiddlers
@@ -438,10 +449,10 @@ class TiddlyWiki
   end
 
   def tiddler_divs
-		# the old way, one tiddler per line...
+    # the old way, one tiddler per line...
     # store.strip.to_a
-		# the new way
-		store.scan(/(<div ti[^>]+>.*?<\/div>)/m).map { |m| m[0] }
+    # the new way
+    store.scan(/(<div ti[^>]+>.*?<\/div>)/m).map { |m| m[0] }
   end
 
   def add_core_hack(regexp,replace)

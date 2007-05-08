@@ -1,7 +1,7 @@
 
 require 'test/unit'
 
-$LOAD_PATH << ".."; require 'r4tw'
+require '../r4tw.rb'
 
 class TiddlerTest < Test::Unit::TestCase
 
@@ -16,6 +16,7 @@ class TiddlerTest < Test::Unit::TestCase
 
   def test_load_empty
     
+    # I had to manually remove the ctrl-M to make these tests work... 
     assert_equal(@tw.to_s,  File.read("withcontent/empty.html"))
     assert_equal(@tw2.to_s, File.read("withcontent/empty2.html"))
     assert_equal(@tw3.to_s, File.read("empties/2.2.0.beta5.html"))
