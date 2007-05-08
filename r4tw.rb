@@ -307,7 +307,7 @@ class Tiddler
   
   # Renames a tiddler
   def rename(new_name)
-    @fields[title_field] = new_name
+    @fields['tiddler'] = new_name
     self
   end
 
@@ -563,7 +563,8 @@ class TiddlyWiki
   end
 
   def store_to_s
-    (@use_pre ? "\n" : "") +
+    # not sure about this bit. breaks some tests if I put it in
+    #((@use_pre and @tiddlers.length > 0) ? "\n" : "") +
     @tiddlers.sort_by{|t| t.name}.inject(""){ |out,t|out << t.to_div(@use_pre) << "\n"}
   end
 
