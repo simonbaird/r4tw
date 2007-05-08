@@ -194,7 +194,7 @@ class Tiddler
   # 
   def from_file(file_name, ext_tag_map=@@default_ext_tag_map)
     ext = File.extname(file_name)
-    base = File.basename(file_name,extension)
+    base = File.basename(file_name,ext)
     @fields = @@defaults.dup
     @fields['tiddler'] = base
     @fields['text'] = read_file(file_name)
@@ -294,13 +294,13 @@ class Tiddler
   end
 
   # Add some text to the end of a tiddler's content
-  def append(text)
-    @fields['text'] += text
+  def append_content(new_content)
+    @fields['text'] += new_content
     self
   end
   
   # Add some text to the beginning of a tiddler's content
-  def prepend(new_content)
+  def prepend_content(new_content)
     @fields['text'] = new_content + @fields['text']
     self
   end
@@ -447,7 +447,7 @@ class TiddlyWiki
     source_empty(url)
   end
 
-  @@store_regexp = /^(.*<div id="storeArea">\n?)(.*)(\n?<\/div>\n<!--.*)$/m
+  @@store_regexp = /^(.*<div id="storeArea">\n?)(.*)(\n?<\/div>\r?\n<!--.*)$/m # stupid ctrl-m \r char
 
   def pre_store
     @raw.sub(@@store_regexp,'\1')
@@ -563,6 +563,7 @@ class TiddlyWiki
   end
 
   def store_to_s
+    (@use_pre ? "\n" : "") +
     @tiddlers.sort_by{|t| t.name}.inject(""){ |out,t|out << t.to_div(@use_pre) << "\n"}
   end
 
@@ -595,7 +596,7 @@ class TiddlyWiki
       Tiddler.new.from_file(f)
     end).map do |t|
       "'" + t.name + "':[\n " + 
-          t.text.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"") + "\n].join(\"\\n\")"
+          t.text.chomp.dump.gsub(/\\t/,"\t").gsub(/\\n/,"\",\n \"").gsub(/\\#/,"#") + "\n].join(\"\\n\")"
     end).join(",\n\n")+
     "\n\n});\n//}}}\n"
   end
