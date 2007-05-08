@@ -1,9 +1,10 @@
 
 require 'test/unit'
 
-$LOAD_PATH << ".."; require 'r4tw'
+$LOAD_PATH << ".."
+require 'r4tw'
 
-class TiddlerTest < Test::Unit::TestCase
+class UtilsTest < Test::Unit::TestCase
 
   def test_encode_decode
         

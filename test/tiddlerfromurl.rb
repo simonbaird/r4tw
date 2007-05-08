@@ -11,10 +11,10 @@ class TiddlerFromUrl < Test::Unit::TestCase
 
   def test_it
     @tw.add_tiddler_from_url(
-        "http://mptw.googlecode.com/svn/trunk/noupgrade/MonkeyPirateTiddlyWiki.tiddler",
+        "http://svn.tiddlywiki.org/Trunk/contributors/SimonBaird/mptw/trunk/noupgrade/MonkeyPirateTiddlyWiki.tiddler",
         {'tiddler'=>'MPTW'}
       )
-    @tw.to_file "zz"
+    # @tw.to_file "zz"
     assert_equal( @tw.get_tiddler("MPTW").name, "MPTW" )
   end
 

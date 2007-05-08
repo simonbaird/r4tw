@@ -1,13 +1,14 @@
-
+# not sure if this is working???
 
 require 'test/unit'
 
-$LOAD_PATH << ".."; require 'r4tw'
+$LOAD_PATH << ".."
+require 'r4tw'
 
 class FromRemote < Test::Unit::TestCase
 
   def setup
-    @tw = make_tw { source_url }
+    @tw = make_tw { source_url }    
   end
 
   def test_it

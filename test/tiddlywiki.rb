@@ -1,43 +1,61 @@
 
 require 'test/unit'
 
-require '../r4tw.rb'
+$LOAD_PATH << "..";
+require 'r4tw'
 
-class TiddlerTest < Test::Unit::TestCase
+class TiddlyWikiTest < Test::Unit::TestCase
 
   def setup
-    @tw  = make_tw { source_file "withcontent/empty.html" }
-    @tw2 = make_tw { source_file "withcontent/empty2.html" }
-    @tw3 = make_tw { source_file "empties/2.2.0.beta5.html" }
-    @tw4 = make_tw { source_file "withcontent/2.2.0.beta5.html" }
+  
+    # these are 2.1 TW
+    @tw1 = make_tw { source_file "#{this_dir(__FILE__)}/empties/2.1.3.html" }    
+    @tw2 = make_tw { source_file "#{this_dir(__FILE__)}/withcontent/empty2.html" }
+    
+    # these two are 2.2 beta TW
+    @tw3 = make_tw { source_file "#{this_dir(__FILE__)}/empties/2.2.0.beta5.html" }
+    @tw4 = make_tw { source_file "#{this_dir(__FILE__)}/withcontent/2.2.0.beta5.html" }
 
-    #puts @tw4.tiddlers[0].name
   end
 
   def test_load_empty
+
+    # should be the case that reading and writing a TW
+    # doesn't change it
+    assert_equal(File.read("#{this_dir(__FILE__)}/empties/2.1.3.html"),@tw1.to_s)
+    assert_equal(File.read("#{this_dir(__FILE__)}/withcontent/empty2.html"),@tw2.to_s)
     
-    # I had to manually remove the ctrl-M to make these tests work... 
-    assert_equal(@tw.to_s,  File.read("withcontent/empty.html"))
-    assert_equal(@tw2.to_s, File.read("withcontent/empty2.html"))
-    assert_equal(@tw3.to_s, File.read("empties/2.2.0.beta5.html"))
-    assert_equal(@tw4.to_s, File.read("withcontent/2.2.0.beta5.html"))
+    assert_equal(File.read("#{this_dir(__FILE__)}/empties/2.2.0.beta5.html"),@tw3.to_s)
+    assert_equal(File.read("#{this_dir(__FILE__)}/withcontent/2.2.0.beta5.html"),@tw4.to_s)
 
   end
     
-  def ztest_orig_tiddler
-                 
-    assert_equal(
-      @tw2.get_tiddler("translations").name,
-      "translations"
-      )
+  def test_orig_tiddler
+  
+    # check that we found some tiddlers or not as approriate
             
+    assert_equal(0,@tw1.tiddlers.length)            
+    
     assert_equal(
-      @tw.tiddlers.length,
-      0)            
+      "translations",
+      @tw2.get_tiddler("translations").name
+      )
 
     assert_equal(
-      @tw2.tiddlers.length,
-      1)            
+      "JeremyRuston",
+      @tw2.get_tiddler("translations").modifier
+      )
+
+
+    assert_equal(0,@tw3.tiddlers.length)            
+    
+    assert_equal(2,@tw4.tiddlers.length)            
+
+    assert_equal(
+      "SimonBaird",
+      @tw4.get_tiddler("Foo").modifier
+      )
+
        
   end   
   

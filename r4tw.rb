@@ -21,8 +21,8 @@ def fetch_url(url) #:nodoc:
   open(url).read.to_s
 end
 
-def this_dir #:nodoc:
-  Pathname.new($0).expand_path.dirname
+def this_dir(this_file=$0) #:nodoc:
+  Pathname.new(this_file).expand_path.dirname
 end
 
 class String
@@ -117,7 +117,7 @@ class Tiddler
       'tiddler'  => 'New Tiddler',
       'modified' => Time.now.convertToYYYYMMDDHHMM,
       'created'  => Time.now.convertToYYYYMMDDHHMM,
-      'modifier' => 'r4tw',
+      'modifier' => 'YourName',
       'tags'     => '',
       'text'     => '', 
   }
@@ -175,6 +175,9 @@ class Tiddler
     text_str.sub!(/<\/pre>\n/,'')
 
     field_str.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
+      if field_name == "title"
+        field_name = "tiddler"
+      end
       @fields[field_name] = field_value
     end
 
@@ -223,20 +226,33 @@ class Tiddler
   def from_remote_tw(url)
     tiddler_name = url.split("#").last
     ## XXX want to make it TiddlyWiki.new.from_url(url)
-    make_tw{ source_empty(url) }.get_tiddler(tiddler_name)
+    puts url
+    puts tiddler_name
+    make_tw{ source_url(url) }.get_tiddler(tiddler_name)
+  end
+
+  def extended_fields
+    @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
   end
 
   # Converts to a div suitable for a TiddlyWiki store area
   def to_s(use_pre=false)
-    main_fields = @@main_fields
-    if use_pre
-      main_fields[0] = 'title' # instead of tiddler (this sucks)
-    end
-    extended_fields = @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
 
     fields_string =
-      main_fields.reject{|f| f == 'modified' and !@fields[f]}.map { |f| %{#{f}="#{@fields[f]}"} } +
-      extended_fields.map{ |f| %{#{f}="#{@fields[f]}"} }    
+      @@main_fields.
+        reject{|f| f == 'modified' and !@fields[f]}.
+        map { |f|
+          # support old style tiddler=""
+          # and new style title=""
+          if f == 'tiddler' and use_pre
+            field_name = 'title'
+          else
+            field_name = f
+          end
+          %{#{field_name}="#{@fields[f]}"}
+        } +
+      extended_fields.
+        map{ |f| %{#{f}="#{@fields[f]}"} }    
 
     if use_pre
       "<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>"
@@ -247,7 +263,7 @@ class Tiddler
   end
 
   # Same as to_s
-  def to_div(use_pre)
+  def to_div(use_pre=false)
     to_s(use_pre)
   end
 
