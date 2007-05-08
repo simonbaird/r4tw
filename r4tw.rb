@@ -55,6 +55,7 @@ class String
   end
 
   def readBrackettedList
+    # scan is a beautiful thing
     scan(/\[\[([^\]]+)\]\]|(\S+)/).map {|m| m[0]||m[1]}
   end  
 
@@ -62,6 +63,7 @@ class String
     self
   end
 
+  # was using this for test units but actually I don't think it's needed any more
   def eat_ctrl_m!
     gsub!("\x0d",'')
   end
@@ -202,10 +204,6 @@ class Tiddler
     self
   end
 
-  def prepend_content(new_content)
-    @fields['text'] = new_content + @fields['text']
-  end
-
   #
   # Creates a tiddler from a url. The entire contents of the page are the contents
   # of the tiddler.
@@ -231,6 +229,8 @@ class Tiddler
     make_tw{ source_url(url) }.get_tiddler(tiddler_name)
   end
 
+  # Returns a hash containing the tiddlers extended fields
+  # Probably would include changecount at this stage at least
   def extended_fields
     @fields.keys.reject{ |f| @@main_fields.include?(f) || f == 'text' }.sort
   end
@@ -272,23 +272,13 @@ class Tiddler
   #  tiddler.created
   # etc
   #
-
-  def title_field
-    if @fields['title']
-      'title'
-    else
-      'tiddler'
-    end
-  end
-
   def method_missing(method,*args)
 
     method = method.to_s
 
     synonyms = {
-      'name'    => title_field,
-      'title'   => title_field,
-      'tiddler' => title_field,
+      'name'    => 'tiddler',
+      'title'   => 'tiddler',
       'content' => 'text',
       'body'    => 'text',
     }
@@ -303,13 +293,19 @@ class Tiddler
 
   end
 
-  # Add some text to the content of the tiddler
+  # Add some text to the end of a tiddler's content
   def append(text)
     @fields['text'] += text
     self
   end
-
-  # Rename a tiddler
+  
+  # Add some text to the beginning of a tiddler's content
+  def prepend(new_content)
+    @fields['text'] = new_content + @fields['text']
+    self
+  end
+  
+  # Renames a tiddler
   def rename(new_name)
     @fields[title_field] = new_name
     self
@@ -365,6 +361,7 @@ class Tiddler
   def get_slices
     if not @slices
       @slices = {}
+      # look familiar?
       slice_re = /(?:[\'\/]*~?(\w+)[\'\/]*\:[\'\/]*\s*(.*?)\s*$)|(?:\|[\'\/]*~?(\w+)\:?[\'\/]*\|\s*(.*?)\s*\|)/m
       text.scan(slice_re).each do |l1,v1,l2,v2|
         @slices[l1||l2] = v1||v2;
@@ -465,10 +462,11 @@ class TiddlyWiki
   end
 
   def tiddler_divs
-    # the old way, one tiddler per line...
+    ## the old way, one tiddler per line...
     # store.strip.to_a
-    # the new way
+    ## the new way
     store.scan(/(<div ti[^>]+>.*?<\/div>)/m).map { |m| m[0] }
+    # did I mention that scan is a beautiful thing?
   end
 
   def add_core_hack(regexp,replace)
