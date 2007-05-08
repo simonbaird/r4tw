@@ -4,7 +4,7 @@
 # r4tw is some ruby classes for manipuating TiddlyWikis and tiddlers.
 # It is similar to cook and ginsu but much cooler.
 #
-# <i>$rev: 1684 $</i>
+# <i>$Rev$</i>
 
 
 #---------------------------------------------------------------------
