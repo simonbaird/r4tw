@@ -1,15 +1,18 @@
 
-# until I make a better example..
-# this is how I manage http://mptw.tiddlyspot.com/empty.html
-
 require 'r4tw'
 
 make_tw {
-  source_file           'empty.html'
-  add_tiddlers_from_dir 'core'
-  package_as_from_dir   'misc/MptwLayoutPlugin.js', 'layout'
-  store_to_file         'upload/upgrade.html'
-  add_tiddlers_from_dir 'noupgrade'
-  to_file               'upload/empty.html'
-  store_to_divs         'upload/MonkeyPirateTiddlyWiki.tiddler' # tiddlyspot uses this
+
+  source_file 'test/empties/2.1.3.html'
+
+  add_tiddler_from_scratch {
+    'tiddler'=>'SiteTitle',
+    'text'=>'Hello from r4tw'
+    'modifier'=>'r4tw'
+  }
+
+  add_tiddler_from_file 'hello.js'
+
+  to_file 'mytw.html'
+
 }
