@@ -174,15 +174,15 @@ class Tiddler
     field_str = match_data[1]
     text_str = match_data[2]
 
-    text_str.sub!(/\n<pre>/,'')
-    text_str.sub!(/<\/pre>\n/,'')
-
     field_str.scan(/ ([\w\.]+)="([^"]+)"/) do |field_name,field_value|
       if field_name == "title"
         field_name = "tiddler"
       end
       @fields[field_name] = field_value
     end
+
+    text_str.sub!(/\n<pre>/,'')
+    text_str.sub!(/<\/pre>\n/,'')
 
     @fields['text'] = text_str.unescapeLineBreaks.decodeHTML
 
@@ -397,7 +397,7 @@ end
 
 #---------------------------------------------------------------------
 # =Tiddlywiki
-# Create a manipulate TiddlyWiki files 
+# Create and manipulate TiddlyWiki files 
 #
 
 #####
@@ -408,12 +408,15 @@ class TiddlyWiki
 
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
+  # doesn't do much. probably should allow an empty file param
   def initialize(use_pre=false)
     @use_pre = use_pre
     @tiddlers = []
   end
 
   # this should replace all the add_tiddler_from_blah methods
+  # but actually they are still there below
+  # testing required
   def method_missing(method_name,*args);
     case method_name.to_s
     when /^add_tiddler_(.*)$/
@@ -421,6 +424,9 @@ class TiddlyWiki
     end
   end
 
+  # initialise a TiddlyWiki from a source file
+  # will treat empty_file as a url if it looks like one
+  # note that it doesn't have to be literally empty
   def source_empty(empty_file)
     @empty_file = empty_file
     if empty_file =~ /^https?/
@@ -435,34 +441,44 @@ class TiddlyWiki
     if @raw =~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
       @use_pre = true
     end
+
     @core_hacks = []
     @orig_tiddlers = get_orig_tiddlers
     @tiddlers = @orig_tiddlers
   end
 
+  # reads an empty from a file on disk
   def source_file(file_name="empty.html") 
     source_empty(file_name)
   end
 
+  # reads an empty file from a url
   def source_url(url="http://www.tiddlywiki.com/empty.html")
     source_empty(url)
   end
 
+  # important regexp
+  # if this doesn't work we are screwed
   @@store_regexp = /^(.*<div id="storeArea">\n?)(.*)(\n?<\/div>\r?\n<!--.*)$/m # stupid ctrl-m \r char
 
-  def pre_store
+  # everything before the store
+  # TODO make these private
+  def pre_store #:nodoc:
     @raw.sub(@@store_regexp,'\1')
   end
 
-  def store
+  # the store itself
+  def store #:nodoc:
     @raw.sub(@@store_regexp,'\2')
   end
 
-  def post_store
+  # everything after the store
+  def post_store #:nodoc:
     @raw.sub(@@store_regexp,'\3')
   end
 
-  def tiddler_divs
+  # returns an array of tiddler divs
+  def tiddler_divs #:nodoc:
     ## the old way, one tiddler per line...
     # store.strip.to_a
     ## the new way
@@ -470,48 +486,64 @@ class TiddlyWiki
     # did I mention that scan is a beautiful thing?
   end
 
+  # add a core hack
+  # it will be applied to the entire TW core like this gsub(regexp,replace)
   def add_core_hack(regexp,replace)
     # this is always a bad idea... ;)
     @core_hacks.push([regexp,replace])
   end
 
-  def get_orig_tiddlers
+  def get_orig_tiddlers #:nodoc:
     tiddler_divs.map do |tiddler_div|
       Tiddler.new.from_div(tiddler_div)
     end
   end
 
+  # an array of tiddler titles
   def tiddler_titles
     @tiddlers.map { |t| t.name }
   end
 
+  # returns an array of tiddlers containing a particular tag
   def tiddlers_with_tag(tag)
     @tiddlers.select{|t| t.has_tag(tag)}
   end
 
+  # adds a tiddler
   def add_tiddler(tiddler)
     remove_tiddler(tiddler.name)
     @tiddlers << tiddler
     tiddler
   end
 
+  # removes a tiddler by name
   def remove_tiddler(tiddler_name)
     @tiddlers.reject!{|t| t.name == tiddler_name}
   end
   
+  # adds a tiddler from a url
+  # see also +Tiddler::from_url+
+  # XXX is this obsoleted by method_missing?
   def add_tiddler_from_url(url,fields)
     add_tiddler Tiddler.new.from_url(url,fields)
   end
 
+  # adds a tiddler from a remote TW
+  # see also +Tiddler::from_remote_tw+
+  # XXX is this obsoleted by method_missing?
   def add_tiddler_from_remote_tw(url)
     add_tiddler Tiddler.new.from_remote_tw(url)
   end
 
 
+  # adds a tiddler from a file
+  # see also +Tiddler#from_file+
   def add_tiddler_from_file(file_name)
     add_tiddler Tiddler.new.from_file("#{file_name}")
   end
 
+  # adds a shadow tiddler
+  # note that tags and other fields aren't preserved
   def add_shadow_tiddler(tiddler)
     # shadow tiddlers currently implemented as core_hacks
     add_core_hack(
@@ -520,30 +552,49 @@ class TiddlyWiki
     )
   end
   
+  # adds a shadow tiddler from a file
   def add_shadow_tiddler_from_file(file_name)
     add_shadow_tiddler Tiddler.new.from_file("#{file_name}")
   end
 
+  # add tiddlers from a list of file names
+  # ignores file names starting with #
+  # so you can do this
+  #  %w[
+  #   foo
+  #   bar
+  #   #baz
+  #  ]
+  # and it will skip baz
   def add_tiddlers(file_names)
     file_names.reject{|f| f.match(/^#/)}.each do |f|
       add_tiddler_from_file(f)
     end
   end
 
+  # add tiddlers from files found in directory dir_name
+  # TODO exclude pattern?
   def add_tiddlers_from_dir(dir_name)
     add_tiddlers(Dir.glob("#{dir_name}/*"))
   end
 
+  # add shadow tiddlers from files found in directory dir_name
   def add_shadow_tiddlers_from_dir(dir_name)
     Dir.glob("#{dir_name}/*").each do |f|
       add_shadow_tiddler_from_file(f)
     end
   end
 
+  # add a list of files found in dir_name packaged as javascript to create shadow tiddlers
+  # append the javascript to the contents of file_name
+  # (needs more explanation perhaps)
+  # see also package_as
   def package_as_from_dir(file_name,dir_name)
     package_as(file_name,Dir.glob("#{dir_name}/*"))
   end
 
+  # if you have a file containing just tiddler divs you can read them 
+  # all in with this
   def add_tiddlers_from_file(file_name)
     # a file full of divs
     File.read(file_name).to_a.inject([]) do |tiddlers,tiddler_div|
@@ -551,40 +602,52 @@ class TiddlyWiki
     end
   end
 
+  # get a tidler by name
   def get_tiddler(tiddler_title)
     @tiddlers.select{|t| t.name == tiddler_title}.first
   end
 
+  # output the TiddlyWiki file
   def to_s
-    pre = pre_store
+    pre_store_hacked = pre_store
+    post_store_hacked = post_store
     @core_hacks.each do |hack|
-      pre.gsub!(hack[0],hack[1])
+      pre_store_hacked.gsub!(hack[0],hack[1])
+      post_store_hacked.gsub!(hack[0],hack[1])
     end
-    "#{pre}#{store_to_s}#{post_store}"
+    "#{pre_store_hacked}#{store_to_s}#{post_store_hacked}"
   end
 
+  # output just the contents of the store
   def store_to_s
     # not sure about this bit. breaks some tests if I put it in
     #((@use_pre and @tiddlers.length > 0) ? "\n" : "") +
     @tiddlers.sort_by{|t| t.name}.inject(""){ |out,t|out << t.to_div(@use_pre) << "\n"}
   end
 
+  # writes just the store area to a file
+  # the file can be used with ImportTiddlers to save download bandwidth
   def store_to_file(file_name)
-    # xmp is for human readability. probably should remove it
-    File.open(file_name,"w") { |f| f << "<xmp><div id=\"storeArea\">\n#{store_to_s}</div></xmp>" }
+    File.open(file_name,"w") { |f| f << "<div id=\"storeArea\">\n#{store_to_s}</div>" }
     puts "Wrote store only to '#{file_name}'"
   end
 
+  # writes just the store contents to a file
   def store_to_divs(file_name)
     File.open(file_name,"w") { |f| f << store_to_s }
     puts "Wrote tiddlers only to '#{file_name}'"
   end
 
+  # writes the entire TiddlyWiki to a file
   def to_file(file_name)
     File.open(file_name,"w") { |f| f << to_s }
     puts "Wrote tw file to '#{file_name}'"
   end
 
+  # takes a list of file_names, reads their content
+  # and converts them to javascript creation of shadow tiddlers
+  # then appends that to the contents of file_name
+  # (sorry, confusing)
   def package_as(file_name,package_file_names)
     new_tiddler = add_tiddler Tiddler.new.from_file(file_name)
     new_tiddler.append_content(package(package_file_names))
@@ -592,7 +655,8 @@ class TiddlyWiki
     new_tiddler.fields['modified'] = package_file_names.push(file_name).map{|f| File.mtime(f)}.max.convertToYYYYMMDDHHMM
   end
   
-  def package(file_names)
+  # TODO make private?
+  def package(file_names) #:nodoc:
     "//{{{\nmerge(config.shadowTiddlers,{\n\n"+
     ((file_names.map do |f|
       Tiddler.new.from_file(f)
@@ -603,7 +667,11 @@ class TiddlyWiki
     "\n\n});\n//}}}\n"
   end
 
+  # copy all tiddlers from another TW file into this TW
+  # good for creating Tiddlyspot flavours
   def copy_all_tiddlers_from(file_name)
+    # TODO want to do it like this TiddlyWiki.new(file_name).tiddlers.each
+    # so need file_name in initialise
     make_tw { source_file file_name }.tiddlers.each do |t|
       add_tiddler t
     end

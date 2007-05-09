@@ -1,8 +1,8 @@
-# also not working??
 
 require 'test/unit'
 
-$LOAD_PATH << ".."; require 'r4tw'
+$LOAD_PATH << ".."
+require 'r4tw'
 
 class FromUrl < Test::Unit::TestCase
 

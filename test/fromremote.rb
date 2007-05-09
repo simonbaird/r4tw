@@ -1,4 +1,3 @@
-# not sure if this is working???
 
 require 'test/unit'
 

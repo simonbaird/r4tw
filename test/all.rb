@@ -23,6 +23,6 @@ require 'addtag'
 require 'shadows'
 require 'tiddlerfromurl'
 
-## these two not working?
+## these two not working from my PC but do work elsewhere
 #require 'fromurl'
 #require 'fromremote'
