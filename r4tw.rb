@@ -416,7 +416,7 @@ class TiddlyWiki
   def method_missing(method_name,*args);
     case method_name.to_s
     when /^add_tiddler_(.*)$/
-      add_tiddler(Tiddler.send("new_#{$1}",*args))
+      add_tiddler(Tiddler.new.send($1,*args))
     end
   end
 
