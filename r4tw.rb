@@ -400,10 +400,6 @@ end
 # Create and manipulate TiddlyWiki files 
 #
 
-#####
-##### Done cleaning up Tiddler but haven' started on this yet...
-#####
-
 class TiddlyWiki
 
   attr_accessor :orig_tiddlers, :tiddlers, :raw
