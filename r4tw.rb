@@ -1,6 +1,7 @@
 #
 # =r4tw
 # Author:: Simon Baird
+# URL:: http://simonbaird.com/r4tw/
 # r4tw is some ruby classes for manipuating TiddlyWikis and tiddlers.
 # It is similar to cook and ginsu but much cooler.
 #
