@@ -263,10 +263,6 @@ class Tiddler
 
   end
 
-  def create_from(*args)
-    from(*args)
-  end
-
 
   # Returns a hash containing the tiddlers extended fields
   # Probably would include changecount at this stage at least
