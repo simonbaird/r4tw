@@ -231,11 +231,12 @@ class Tiddler
   #  Tiddler.new.from_remote_tw("http://www.tiddlywiki.com/#HelloThere")
   #
   def from_remote_tw(url)
-    tiddler_name = url.split("#").last
-    ## XXX want to make it TiddlyWiki.new.from_url(url)
-    puts url
-    puts tiddler_name
-    make_tw{ source_url(url) }.get_tiddler(tiddler_name)
+    remote_url,tiddler_name = url.split("#")
+    TiddlyWiki.new.source_empty(remote_url).get_tiddler(tiddler_name)
+  end
+  
+  def from_local_tw(url)
+    from_remote_tw(url)
   end
 
   # Saq's creation. Use this instead of the above
@@ -243,14 +244,14 @@ class Tiddler
   def from(*args)
 
     case args[0]
-      when !String
+      when Hash
         from_scratch(*args)
 
-      when /^https?:/
-        from_url(*args)
-
-      when /^https?:.*#/
+      when /^(ftp|https?):.*#/
         from_remote_tw(*args)
+
+      when /^(ftp|https?):/
+        from_url(*args)
 
       when /#/
         from_local_tw(*args)
@@ -467,7 +468,7 @@ class TiddlyWiki
   # initialise a TiddlyWiki from a source file
   # will treat empty_file as a url if it looks like one
   # note that it doesn't have to be literally empty
-  def source_empty(empty_file)
+  def source_empty(empty_file,&block)
     @empty_file = empty_file
     if empty_file =~ /^https?/
       @raw = fetch_url(@empty_file)
@@ -485,6 +486,10 @@ class TiddlyWiki
     @core_hacks = []
     @orig_tiddlers = get_orig_tiddlers
     @tiddlers = @orig_tiddlers
+    
+    instance_eval(&block) if block
+    
+    self
   end
 
   # reads an empty from a file on disk
@@ -565,27 +570,6 @@ class TiddlyWiki
   # removes a tiddler by name
   def remove_tiddler(tiddler_name)
     @tiddlers.reject!{|t| t.name == tiddler_name}
-  end
-  
-  # adds a tiddler from a url
-  # see also +Tiddler::from_url+
-  # XXX is this obsoleted by method_missing?
-  def add_tiddler_from_url(url,fields)
-    add_tiddler Tiddler.new.from_url(url,fields)
-  end
-
-  # adds a tiddler from a remote TW
-  # see also +Tiddler::from_remote_tw+
-  # XXX is this obsoleted by method_missing?
-  def add_tiddler_from_remote_tw(url)
-    add_tiddler Tiddler.new.from_remote_tw(url)
-  end
-
-
-  # adds a tiddler from a file
-  # see also +Tiddler#from_file+
-  def add_tiddler_from_file(file_name)
-    add_tiddler Tiddler.new.from_file("#{file_name}")
   end
 
   # adds a shadow tiddler
@@ -721,9 +705,7 @@ class TiddlyWiki
   # copy all tiddlers from another TW file into this TW
   # good for creating Tiddlyspot flavours
   def copy_all_tiddlers_from(file_name)
-    # TODO want to do it like this TiddlyWiki.new(file_name).tiddlers.each
-    # so need file_name in initialise
-    make_tw { source_file file_name }.tiddlers.each do |t|
+    TiddlyWiki.new.source_empty(file_name).tiddlers.each do |t|
       add_tiddler t
     end
   end
@@ -733,11 +715,10 @@ end
 #
 # A short hand for DSL style TiddlyWiki creation. Takes a block of TiddlyWiki methods that get instance_eval'ed
 #
-def make_tw(&block)
+def make_tw(source=nil,&block)
   tw = TiddlyWiki.new
-  if block
-    tw.instance_eval(&block)
-  end
+  tw.source_empty(source) if source
+  tw.instance_eval(&block) if block
   tw
 end
 
