@@ -8,7 +8,7 @@
 #
 # <i>$Rev$</i>
 # 
-# ==Known problems
+# ===Known problems
 # from_remote_tw can be problematic if importing from a 2.1 TW into a 2.2 TW.
 #
 
@@ -109,7 +109,7 @@ end
 # =Tiddler
 # For creating and manipulating tiddlers
 # ===Example
-#  puts Tiddler.new.from_scratch('tiddler'=>'Hello','text'=>'Hi there').to_s
+#  puts Tiddler.new.from('tiddler'=>'Hello','text'=>'Hi there','tags'=>['tag1','tag2']).to_s
 
 class Tiddler
 
@@ -140,17 +140,9 @@ class Tiddler
   
   attr_accessor :fields
 
-  #
-  # New by itself doesn't do much so instead you usually use:
-  # * Tiddler.new.from
-  #
-  def initialize
-        @fields = {}
-  end
-
   # Depending on the arguments this can be used to create or import a tiddler in various ways.
   # 
-  # =From scratch
+  # ===From scratch
   # If the argument is a Hash then it is used to specify a tiddler to be created from
   # scratch.
   # 
@@ -164,7 +156,7 @@ class Tiddler
   # the tiddler. Tiddler is the title of the tiddler. 
   #
   #
-  # =From a file
+  # ===From a file
   # If the argument looks like a file name (ie a string that doesn't match the other
   # criteria then create a tiddler with the name being the file name and the
   # contents being the contents of the file. Does some guessing about tags based on 
@@ -174,7 +166,7 @@ class Tiddler
   # Example:
   #  t = Tiddler.new.from("myplugin.js")
   # 
-  # =From a TiddlyWiki
+  # ===From a TiddlyWiki
   # If the argument is in the form file.html#TiddlerName or http://sitename.com/#TiddlerName
   # then import TiddlerName from the specified location
   # 
@@ -183,7 +175,7 @@ class Tiddler
   #  t2 = Tiddler.new.from("http://www.tiddlywiki.com/#HelloThere")
   # 
   # 
-  # =From a url
+  # ===From a url
   # Creates a tiddler from a url. The entire contents of the page are the contents
   # of the tiddler. You should set the 'tiddler' field and other fields using a hash 
   # as the second argument in the same format as creating a tiddler from scratch.
@@ -196,16 +188,14 @@ class Tiddler
   #  )
   # 
   # 
-  # =From a div string
+  # ===From a div string
   # If the argument is a string containing a tiddler div such
   # as would be found in a TiddlyWiki storeArea then the tiddler
   # is created from that div
   #
-  
-  # You can use this for 
-  # TODO update docs and examples
-  # 
-  def from(*args)
+  def initialize(*args)
+    @fields = {}
+
     case args[0]
       when Hash
         from_scratch(*args)
@@ -219,8 +209,9 @@ class Tiddler
       when /^(ftp|http|file):/
         from_url(*args)
 
-      else
+      when String
         from_file(*args)
+
     end
   end
 
@@ -285,8 +276,8 @@ class Tiddler
     TiddlyWiki.new.source_empty(location).get_tiddler(tiddler_name)
   end
   
-  alias from_remote_tw from_tw
-  alias from_local_tw from_tw
+  alias from_remote_tw from_tw #:nodoc:
+  alias from_local_tw from_tw #:nodoc:
 
   # Returns a hash containing the tiddlers extended fields
   # Probably would include changecount at this stage at least
@@ -328,7 +319,7 @@ class Tiddler
 
   end
 
-  alias to_div to_s
+  alias to_div to_s #:nodoc:
 
   # Lets you access fields like this:
   #  tiddler.name
@@ -420,7 +411,7 @@ class Tiddler
     fields['tags'] && fields['tags'].readBrackettedList.include?(tag)
   end
 
-  # Returns all tiddler slice
+  # Returns a Hash containing all tiddler slices
   def get_slices
     if not @slices
       @slices = {}
