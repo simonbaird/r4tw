@@ -69,11 +69,6 @@ class String
     self
   end
 
-  # was using this for test units but actually I don't think it's needed any more
-  def eat_ctrl_m!
-    gsub!("\x0d",'')
-  end
-
 end
 
 class Array
@@ -109,7 +104,7 @@ end
 # =Tiddler
 # For creating and manipulating tiddlers
 # ===Example
-#  puts Tiddler.new({'tiddler'=>'Hello','text'=>'Hi there','tags'=>['tag1','tag2']}).to_s
+#  puts Tiddler.new({'tiddler'=>'Hello','text'=>'Hi there','tags'=>['tag1','tag2']})
 
 class Tiddler
 
