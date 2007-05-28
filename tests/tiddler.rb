@@ -14,6 +14,14 @@ class TiddlerTest < Test::Unit::TestCase
       /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags=""><\/div>/,
       t.to_div
       )
+
+    tt = Tiddler.new({})
+                     
+    assert_match(
+      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags=""><\/div>/,
+      tt.to_div
+      )
+
            
     assert_equal("New Tiddler",t.name)
     assert_equal("YourName",t.fields['modifier'])   

@@ -109,7 +109,7 @@ end
 # =Tiddler
 # For creating and manipulating tiddlers
 # ===Example
-#  puts Tiddler.new.from('tiddler'=>'Hello','text'=>'Hi there','tags'=>['tag1','tag2']).to_s
+#  puts Tiddler.new({'tiddler'=>'Hello','text'=>'Hi there','tags'=>['tag1','tag2']}).to_s
 
 class Tiddler
 
@@ -195,16 +195,19 @@ class Tiddler
   #
   def initialize(*args)
     @fields = {}
-
+ 
     case args[0]
       when Hash
         from_scratch(*args)
 
+      when Tiddler
+        from_tiddler(*args)
+        
       when /^\s*<div/
         from_div(*args)
 
       when /#/
-        from_tw(*args)
+        from_tiddler(from_tw(*args))
         
       when /^(ftp|http|file):/
         from_url(*args)
@@ -213,6 +216,7 @@ class Tiddler
         from_file(*args)
 
     end
+    
   end
 
 
@@ -220,6 +224,11 @@ class Tiddler
   # all the test units use them
   # 
   #private  
+  
+  def from_tiddler(other_tiddler)
+    @fields = {}
+    @fields.update(other_tiddler.fields)
+  end
   
   def from_scratch(fields={}) #:nodoc:
     @fields = @@defaults.merge(fields)
@@ -494,7 +503,7 @@ class TiddlyWiki
     @core_hacks = []
     @orig_tiddlers = get_orig_tiddlers
     @tiddlers = @orig_tiddlers
-    
+      
     instance_eval(&block) if block
     
     self
@@ -605,8 +614,12 @@ class TiddlyWiki
     end
   end
 
+  def add_tiddler_from(*args)
+    add_tiddler Tiddler.new(*args)
+  end
+  
   def add_tiddlers_from(tiddler_list)
-     tiddler_list.each { |t| add_tiddler_from(t) }
+     tiddler_list.each { |t| add_tiddler Tiddler.new(t) }
   end
 
 
