@@ -6,6 +6,9 @@
 # r4tw is some ruby classes for manipuating TiddlyWikis and tiddlers.
 # It is similar to cook and ginsu but cooler.
 #
+# ==Known problems
+# from_remote_tw can be problematic if importing from a 2.1 TW into a 2.2 TW.
+#
 # <i>$Rev$</i>
 
 
@@ -217,8 +220,8 @@ class Tiddler
   # There is no automatic tagging for this one. 
   # 
   def from_url(url,fields={})
-    @text = fetch_url(url)
     @fields = @@defaults.merge(fields)    
+    @fields['text'] = fetch_url(url)
     self
   end
 
@@ -234,6 +237,35 @@ class Tiddler
     puts tiddler_name
     make_tw{ source_url(url) }.get_tiddler(tiddler_name)
   end
+
+  # Saq's creation. Use this instead of the above
+  # TODO update docs and examples
+  def from(*args)
+
+    case args[0]
+      when !String
+        from_scratch(*args)
+
+      when /^https?:/
+        from_url(*args)
+
+      when /^https?:.*#/
+        from_remote_tw(*args)
+
+      when /#/
+        from_local_tw(*args)
+
+      else
+        from_file(*args)
+
+    end
+
+  end
+
+  def create_from(*args)
+    from(*args)
+  end
+
 
   # Returns a hash containing the tiddlers extended fields
   # Probably would include changecount at this stage at least
@@ -524,6 +556,12 @@ class TiddlyWiki
     tiddler
   end
 
+  # XXX is this obsoleted by method_missing?
+  def add_tiddler_from(*args)
+     add_tiddler Tiddler.new.from(*args)
+  end
+   
+
   # removes a tiddler by name
   def remove_tiddler(tiddler_name)
     @tiddlers.reject!{|t| t.name == tiddler_name}
@@ -579,6 +617,11 @@ class TiddlyWiki
       add_tiddler_from_file(f)
     end
   end
+
+  def add_tiddlers_from(tiddler_list)
+     tiddler_list.each { |t| add_tiddler_from(t) }
+  end
+
 
   # add tiddlers from files found in directory dir_name
   # TODO exclude pattern?
