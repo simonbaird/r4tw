@@ -16,6 +16,8 @@ class TiddlyWikiTest < Test::Unit::TestCase
     @tw3 = make_tw { source_file "#{this_dir(__FILE__)}/empties/2.2.0.beta5.html" }
     @tw4 = make_tw { source_file "#{this_dir(__FILE__)}/withcontent/2.2.0.beta5.html" }
 
+    @tw5 = make_tw { source_file "#{this_dir(__FILE__)}/withcontent/22b5index.html" }
+
   end
 
   def test_load_empty
@@ -27,6 +29,8 @@ class TiddlyWikiTest < Test::Unit::TestCase
     
     assert_equal(File.read("#{this_dir(__FILE__)}/empties/2.2.0.beta5.html"),@tw3.to_s)
     assert_equal(File.read("#{this_dir(__FILE__)}/withcontent/2.2.0.beta5.html"),@tw4.to_s)
+
+    assert_equal(File.read("#{this_dir(__FILE__)}/withcontent/22b5index.html"),@tw5.to_s)
 
   end
     

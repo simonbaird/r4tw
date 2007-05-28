@@ -170,7 +170,7 @@ class Tiddler
   # Creates a tiddler from a string containg an html div such as
   # would be found in a TiddlyWiki storeArea
   #
-  def from_div(div_str)
+  def from_div(div_str,use_pre=false)
     match_data = div_str.match(/<div([^>]+)>(.*?)<\/div>/m)
     field_str = match_data[1]
     text_str = match_data[2]
@@ -185,7 +185,11 @@ class Tiddler
     text_str.sub!(/\n<pre>/,'')
     text_str.sub!(/<\/pre>\n/,'')
 
-    @fields['text'] = text_str.unescapeLineBreaks.decodeHTML
+    if (use_pre)
+      @fields['text'] = text_str.decodeHTML
+    else
+      @fields['text'] = text_str.unescapeLineBreaks.decodeHTML
+    end
 
     self
   end
@@ -242,7 +246,14 @@ class Tiddler
 
     fields_string =
       @@main_fields.
-        reject{|f| f == 'modified' and !@fields[f]}.
+        reject{ |f|
+          use_pre and (
+            # seems like we have to leave out modified if there is none
+            (f == 'modified' and !@fields[f]) or
+            # seems like we have to not print tags="" any more
+            (f == 'tags' and (!@fields[f] or @fields[f].length == 0))
+          )
+        }.
         map { |f|
           # support old style tiddler=""
           # and new style title=""
@@ -492,7 +503,7 @@ class TiddlyWiki
 
   def get_orig_tiddlers #:nodoc:
     tiddler_divs.map do |tiddler_div|
-      Tiddler.new.from_div(tiddler_div)
+      Tiddler.new.from_div(tiddler_div,@use_pre)
     end
   end
 
@@ -595,7 +606,7 @@ class TiddlyWiki
   def add_tiddlers_from_file(file_name)
     # a file full of divs
     File.read(file_name).to_a.inject([]) do |tiddlers,tiddler_div|
-      @tiddlers << Tiddler.new.from_div(tiddler_div)
+      @tiddlers << Tiddler.new.from_div(tiddler_div,@use_pre)
     end
   end
 
