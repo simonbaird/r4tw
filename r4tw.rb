@@ -721,6 +721,25 @@ class TiddlyWiki
     end
   end
 
+  # write all tiddlers to files in dir_name
+  def write_all_tiddlers_to(dir_name)
+    tiddlers.each do |t|
+
+      ext = 'tiddler'
+
+      # TODO improve this
+      if t.tags and t.tags.include? "systemConfig"
+        ext = 'js'
+      elsif t.name =~ /Template/
+        ext = 'html'
+      elsif t.name =~ /(StyleSheet|Styles)/
+        ext = 'css'
+      end
+
+      t.text.to_file("#{dir_name}/#{t.name}.#{ext}")
+    end
+  end
+
 end
 
 #
