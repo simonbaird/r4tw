@@ -8,18 +8,12 @@ class TiddlerTest < Test::Unit::TestCase
 
   def test_tiddler
     
-    t = Tiddler.new.from_scratch
+                     
+    t = Tiddler.new({})
                      
     assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags=""><\/div>/,
+      /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+">\n<pre><\/pre>\n<\/div>/,
       t.to_div
-      )
-
-    tt = Tiddler.new({})
-                     
-    assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags=""><\/div>/,
-      tt.to_div
       )
 
            
@@ -37,7 +31,7 @@ class TiddlerTest < Test::Unit::TestCase
     assert_equal(['foo'],t.extended_fields)        
 
     assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="" foo="blah">/,
+      /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" foo="blah">/,
       t.to_div
       )
 
@@ -49,19 +43,19 @@ class TiddlerTest < Test::Unit::TestCase
            
     t.add_tag("MyTag")    
     assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="MyTag" foo="blah">/,
+      /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="MyTag" foo="blah">/,
       t.to_div
       )
 
     t.add_tag("My Other Tag")
     assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="MyTag \[\[My Other Tag\]\]" foo="blah">/,
+      /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="MyTag \[\[My Other Tag\]\]" foo="blah">/,
       t.to_div
       )
 
     t.remove_tag("MyTag")
     assert_match(
-      /<div tiddler="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="\[\[My Other Tag\]\]" foo="blah"><\/div>/,
+      /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="\[\[My Other Tag\]\]" foo="blah">/,
       t.to_div
       )
            

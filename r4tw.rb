@@ -231,7 +231,7 @@ class Tiddler
     self
   end
   
-  def from_div(div_str,use_pre=false) #:nodoc:
+  def from_div(div_str,use_pre=true) #:nodoc:
     match_data = div_str.match(/<div([^>]+)>(.*?)<\/div>/m)
     field_str = match_data[1]
     text_str = match_data[2]
@@ -290,7 +290,7 @@ class Tiddler
   end
 
   # Converts to a div suitable for a TiddlyWiki store area
-  def to_s(use_pre=false)
+  def to_s(use_pre=true)
 
     fields_string =
       @@main_fields.
@@ -462,7 +462,7 @@ class TiddlyWiki
   attr_accessor :orig_tiddlers, :tiddlers, :raw
 
   # doesn't do much. probably should allow an empty file param
-  def initialize(use_pre=false)
+  def initialize(use_pre=true)
     @use_pre = use_pre
     @tiddlers = []
   end
@@ -491,8 +491,8 @@ class TiddlyWiki
     # stupid ctrl (\r) char
     #@raw.eat_ctrl_m!
 
-    if @raw =~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
-      @use_pre = true
+    if @raw !~ /var version = \{title: "TiddlyWiki", major: 2, minor: 2/
+      @use_pre = false
     end
 
     @core_hacks = []
