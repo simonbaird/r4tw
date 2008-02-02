@@ -8,7 +8,7 @@ class TagTest < Test::Unit::TestCase
 
   def setup
     @tw = make_tw {
-      source_file "#{this_dir(__FILE__)}/empties/2.1.3.html"
+      source_file "#{this_dir(__FILE__)}/empties/2.3.0.html"
       add_tiddler Tiddler.new.from_scratch({'tiddler'=>'foo', 'text'=>'bar'}).add_tag("hey")
     }
 
