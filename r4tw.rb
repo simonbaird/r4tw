@@ -317,9 +317,14 @@ class Tiddler
         map{ |f| %{#{f}="#{@fields[f]}"} }    
 
     if use_pre
-      "<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>"
+      if @fields['tiddler'] == "DeprecatedFunctionsPlugin"
+        puts @fields['text']
+      end
+      # gotcha: the \n chars were being turned into newlines so don't do it this way:
+      #"<div #{fields_string.join(' ')}>\n<pre>#{@fields['text'].encodeHTML}</pre>\n</div>" 
+      "<div #{fields_string.join(' ')}>\n<pre>"+@fields['text'].encodeHTML+"</pre>\n</div>" 
     else
-      "<div #{fields_string.join(' ')}>#{@fields['text'].escapeLineBreaks.encodeHTML}</div>"
+      "<div #{fields_string.join(' ')}>"+@fields['text'].escapeLineBreaks.encodeHTML+"</div>"
     end
 
 
