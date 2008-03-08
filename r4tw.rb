@@ -129,7 +129,7 @@ class Tiddler
       '.js'      => %[systemConfig],
       '.html'    => %[html],
       '.css'     => %[css],
-      '.pub'     => %[contentPublisher],
+      '.pub'     => %[systemServer],
       '.palette' => %[palette],
   }
   
