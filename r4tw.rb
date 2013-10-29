@@ -127,10 +127,11 @@ class Tiddler
   # used by from_file
   @@default_ext_tag_map = {
       '.js'      => %[systemConfig],
+      '.theme'   => %[systemTheme],
+      '.palette' => %[systemPalette],
       '.html'    => %[html],
       '.css'     => %[css],
       '.pub'     => %[systemServer],
-      '.palette' => %[palette],
   }
 
   attr_accessor :fields
@@ -324,7 +325,19 @@ class Tiddler
       "<div #{fields_string.join(' ')}>"+@fields['text'].escapeLineBreaks.encodeHTML+"</div>"
     end
 
+  end
 
+  # Build meta files as used by cook and slice
+  # Does not do extended fields. TODO
+  def to_cook_meta
+    [
+      "created: #{self.created}",
+      "creator: #{self.creator}",
+      "modified: #{self.modified}",
+      "modifier: #{self.modifier}",
+      "tags: #{self.tags}",
+      "",
+    ].join("\n")
   end
 
   alias to_div to_s #:nodoc:
@@ -385,7 +398,6 @@ class Tiddler
 
   # Adds a tag
   def add_tag(new_tag)
-    @fields['tags'] ||= ''
     @fields['tags'] = @fields['tags'].
       readBrackettedList.
       push(new_tag).
@@ -625,8 +637,8 @@ class TiddlyWiki
 
   # add tiddlers from files found in directory dir_name
   # TODO exclude pattern?
-  def add_tiddlers_from_dir(dir_name)
-    add_tiddlers(Dir.glob("#{dir_name}/*"))
+  def add_tiddlers_from_dir(dir_name,match='*')
+    add_tiddlers(Dir.glob("#{dir_name}/#{match}"))
   end
 
   # add shadow tiddlers from files found in directory dir_name
