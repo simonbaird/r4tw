@@ -120,6 +120,7 @@ class Tiddler
       'modified' => Time.now.convertToYYYYMMDDHHMM,
       'created'  => Time.now.convertToYYYYMMDDHHMM,
       'modifier' => 'YourName',
+      'creator'  => 'YourName',
       'tags'     => '',
       'text'     => '',
   }
