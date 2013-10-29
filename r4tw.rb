@@ -509,7 +509,7 @@ class TiddlyWiki
     # stupid ctrl (\r) char
     #@raw.eat_ctrl_m!
 
-    if @raw !~ /var version = \{title: "TiddlyWiki", major: 2, minor: [23456]/ # fix me
+    if @raw !~ /var version = \{title: "TiddlyWiki", major: 2, minor: [23456789]/ # fix me
       @use_pre = false
     end
 
