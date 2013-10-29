@@ -34,7 +34,7 @@ class TagTest < Test::Unit::TestCase
 
     @tw.get_tiddler("foo").add_tag("now")
     @tw2.get_tiddler("foo").add_tag("now")
-    
+
     assert_match(
       /<div tiddler="foo".*tags="hey now">/,
       @tw.to_s
@@ -45,11 +45,11 @@ class TagTest < Test::Unit::TestCase
       @tw2.to_s
     )
 
-    
+
     # try a rename for fun
     @tw.get_tiddler("foo").rename("bar")
     @tw2.get_tiddler("foo").rename("bar")
-    
+
     assert_match(
       /<div tiddler="bar".*tags="hey now">/,
       @tw.to_s
@@ -60,11 +60,11 @@ class TagTest < Test::Unit::TestCase
       @tw2.to_s
     )
 
-    
+
     # how about a copy
     @tw.add_tiddler(@tw.get_tiddler("bar").copy_to("bar2"))
     @tw2.add_tiddler(@tw.get_tiddler("bar").copy_to("bar2"))
-    
+
     assert_match(
       /<div tiddler="bar".*tags="hey now">/,
       @tw.to_s

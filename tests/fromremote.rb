@@ -7,7 +7,7 @@ require 'r4tw'
 class FromRemote < Test::Unit::TestCase
 
   def setup
-    @tw = make_tw { source_url }    
+    @tw = make_tw { source_url }
   end
 
   def test_it

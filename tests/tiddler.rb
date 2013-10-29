@@ -7,28 +7,28 @@ require 'r4tw'
 class TiddlerTest < Test::Unit::TestCase
 
   def test_tiddler
-    
-                     
+
+
     t = Tiddler.new({})
-                     
+
     assert_match(
       /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+">\n<pre><\/pre>\n<\/div>/,
       t.to_div
       )
 
-           
+
     assert_equal("New Tiddler",t.name)
-    assert_equal("YourName",t.fields['modifier'])   
-        
+    assert_equal("YourName",t.fields['modifier'])
+
     assert_equal(
       t.to_div,
-      Tiddler.new.from_div(t.to_div).to_div  
+      Tiddler.new.from_div(t.to_div).to_div
       )
-        
-    assert_equal(0,t.extended_fields.length)        
-        
+
+    assert_equal(0,t.extended_fields.length)
+
     t.fields['foo'] = "blah"
-    assert_equal(['foo'],t.extended_fields)        
+    assert_equal(['foo'],t.extended_fields)
 
     assert_match(
       /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" foo="blah">/,
@@ -40,8 +40,8 @@ class TiddlerTest < Test::Unit::TestCase
       t.to_div(true)
       )
 
-           
-    t.add_tag("MyTag")    
+
+    t.add_tag("MyTag")
     assert_match(
       /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="MyTag" foo="blah">/,
       t.to_div
@@ -58,7 +58,7 @@ class TiddlerTest < Test::Unit::TestCase
       /<div title="New Tiddler" modifier="YourName" modified="\d+" created="\d+" tags="\[\[My Other Tag\]\]" foo="blah">/,
       t.to_div
       )
-           
-        
-  end  
+
+
+  end
 end

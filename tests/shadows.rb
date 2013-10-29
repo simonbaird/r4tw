@@ -9,7 +9,7 @@ class ShadowTest < Test::Unit::TestCase
 
   def setup
     @tw = make_tw {
-      source_file "#{this_dir(__FILE__)}/empties/2.1.3.html"    
+      source_file "#{this_dir(__FILE__)}/empties/2.1.3.html"
     }
   end
 
@@ -21,7 +21,7 @@ class ShadowTest < Test::Unit::TestCase
       /^config.shadowTiddlers\["foo"\] = "bar";/m,
       @tw.to_s
     )
-    
+
   end
 
 end
